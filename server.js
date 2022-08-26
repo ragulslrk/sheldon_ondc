@@ -13,7 +13,6 @@ app.use(flash())
 app.set("view engine","ejs")
 app.use(express.static('views'))
 app.use(express.static('assets'))
-
 const cors = require('cors');
 app.use(cors());
 
