@@ -25,11 +25,12 @@ const transaction_schema=mongoose.Schema({
     },
     payment_status:{
         required:false,
-        type:String
+        type:String,
+        default:'Not Handled'
     },
     product_price:{
         required:false,
-        type:String
+        type:Number
     }
 }
 ,{versionKey:false}

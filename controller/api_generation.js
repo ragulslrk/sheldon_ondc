@@ -6,6 +6,7 @@ const nodemailer=require("nodemailer")
 const handlebars = require("handlebars")
 const fs = require("fs")
 const path = require("path")
+const  transaction=require('../model/transaction')
 
 function generateOTP() {
           
@@ -94,7 +95,8 @@ route.get('/sendotp/:access_token',(req,res)=>{
                 console.log("Errror",err)
             }
             else
-            {
+            {result.otp=otp
+                result.save()
                 console.log("Successfully sent")
                 res.json({msg:'otp send'})
             }
@@ -104,4 +106,49 @@ route.get('/sendotp/:access_token',(req,res)=>{
    
 })
 
+
+route.get('/verify_buy/:api_key/:token/:product_name/:product_price/:otp',(req,res)=>{
+    console.log(req.params);
+ merchant.findOne({apikey:req.params.api_key})
+    .then((result)=>{
+        console.log(result);
+        if(result== null)
+        {   
+            res.sendStatus(404)
+        }   
+        else{
+            const decode = jwt.verify(req.params.token,process.env.secret_key);
+            console.log(decode.customer_id);
+            customer.findOne({_id:decode.customer_id})
+            .then((result)=>{
+                if(result.otp === req.params.otp)
+                {   const price=parseInt(req.params.product_price)
+                    const final_amt=result.balance-price
+                    const add_trans= new transaction({
+                        seller_name:decode.seller_name,
+                        buyer_name:result.username,
+                        buyer_balance:final_amt,
+                        product_price:price,
+                        product_name:req.params.product_name,
+                        buyer_balance:final_amt
+
+                    })
+                    result.balance=final_amt
+                    result.otp='not'
+                    result.save()
+                    add_trans.save()
+                    res.json({'msg':'item bought'})
+                }
+                else
+                {
+                    res.json({'msg':'incorrect'})
+                }
+            })
+
+
+        }
+    
+    
+    })
+})
 module.exports=route 
